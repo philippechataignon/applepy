@@ -61,15 +61,16 @@ class Memory:
 
     def __init__(self, options=None, display=None):
         self.display = display
-        self.rom = ROM(0xD000, 0x3000)
 
-        if options:
+        self.rom = ROM(0xD000, 0x3000)
+        if options.rom:
             self.rom.load_file(0xD000, options.rom)
 
         self.ram = RAM(0x0000, 0xC000)
-
-        if options and options.ram:
-            self.ram.load_file(0x0000, options.ram)
+        if options.load and options.address:
+            with open(options.load, "rb") as f:
+                buff = f.read()
+                self.ram.load(options.address, buff)
 
         self.softswitches = SoftSwitches(display)
 
