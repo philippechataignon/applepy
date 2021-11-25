@@ -194,7 +194,7 @@ class Display:
                 base = address - start_hires
                 row8, b = divmod(base, 0x400)
                 hi, lo = divmod(b, 0x80)
-                row_group, column  = divmod(lo, 0x28)
+                row_group, column = divmod(lo, 0x28)
                 row = 8 * (hi + 8 * row_group) + row8
 
                 if self.mix and row >= 160:
@@ -203,7 +203,7 @@ class Display:
                 if row < 192 and column < 40:
 
                     pixels = pygame.PixelArray(self.screen)
-                    msb = value // 0x80
+                    msb = value >> 7
 
                     for b in range(7):
                         c = value & (1 << b)
@@ -211,29 +211,13 @@ class Display:
                         x = 2 * xx
                         y = 2 * row
 
-                        if msb:
-                            if xx % 2:
-                                pixels[x][y] = (0, 0, 0)
-                                # orange
-                                pixels[x + 1][y] = (255, 192, 0) if c else (0, 0, 0)
-                            else:
-                                # blue
-                                pixels[x][y] = (0, 192, 255) if c else (0, 0, 0)
-                                pixels[x + 1][y] = (0, 0, 0)
-                        else:
-                            if xx % 2:
-                                pixels[x][y] = (0, 0, 0)
-                                # green
-                                pixels[x + 1][y] = (0, 255, 0) if c else (0, 0, 0)
-                            else:
-                                # violet
-                                pixels[x][y] = (255, 0, 255) if c else (0, 0, 0)
-                                pixels[x + 1][y] = (0, 0, 0)
-
-                        pixels[x][y + 1] = (0, 0, 0)
-                        pixels[x + 1][y + 1] = (0, 0, 0)
+                        pixels[x][y] = (255, 255, 255) if c else (0, 0, 0)
+                        pixels[x+1][y] = (255, 255, 255) if c else (0, 0, 0)
+                        pixels[x][y+1] = (255, 255, 255) if c else (0, 0, 0)
+                        pixels[x+1][y+1] = (255, 255, 255) if c else (0, 0, 0)
 
                     del pixels
+
 
     def flash(self):
         if time.time() - self.flash_time >= 0.5:
