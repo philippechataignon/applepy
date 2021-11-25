@@ -50,7 +50,12 @@ def get_options():
 
 
 if __name__ == "__main__":
-    options = get_options()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--rom", type=str, default="A2ROM.BIN", help="ROM image file")
+    parser.add_argument("--load", type=str, help="program  image file")
+    parser.add_argument("--address", type=int, default=0x1000, help="load address")
+    options = parser.parse_args()
     display = Display()
     mem = Memory(options, display)
     cpu = CPU(mem)
