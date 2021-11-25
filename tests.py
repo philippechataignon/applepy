@@ -927,11 +927,12 @@ class TestSystemFunctionOperations(unittest.TestCase):
     def test_BRK(self):
         self.cpu.program_counter = 0x1000
         self.memory.rom.load(0xFFFE, [0x00, 0x20])
+        self.cpu.break_flag = 0 # clear B flag before BRK
         status = self.cpu.status_as_byte()
         self.cpu.BRK()
         self.assertEqual(self.cpu.program_counter, 0x2000)
-        self.assertEqual(self.cpu.break_flag, 1)
-        self.assertEqual(self.memory.read_byte(None, self.cpu.STACK_PAGE + self.cpu.stack_pointer + 1), status)
+        # test that B flag is set in stacked status
+        self.assertEqual(self.memory.read_byte(None, self.cpu.STACK_PAGE + self.cpu.stack_pointer + 1), status | 0b00010000)
         self.assertEqual(self.memory.read_byte(None, self.cpu.STACK_PAGE + self.cpu.stack_pointer + 2), 0x01)
         self.assertEqual(self.memory.read_byte(None, self.cpu.STACK_PAGE + self.cpu.stack_pointer + 3), 0x10)
     
