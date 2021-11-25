@@ -1,9 +1,10 @@
-class ROM:
+import numpy
 
+class ROM:
     def __init__(self, start, size):
         self.start = start
         self.end = start + size - 1
-        self._mem = [0x00] * size
+        self._mem = numpy.zeros(size, dtype=numpy.uint8)
 
     def load(self, address, data):
         for offset, datum in enumerate(data):
@@ -11,8 +12,7 @@ class ROM:
 
     def load_file(self, address, filename):
         with open(filename, "rb") as f:
-            for offset, datum in enumerate(f.read()):
-                self._mem[address - self.start + offset] = datum
+            self._mem = numpy.fromfile(f, dtype=numpy.uint8)
 
     def read_byte(self, address):
         assert self.start <= address <= self.end
@@ -22,7 +22,6 @@ class RAM(ROM):
 
     def write_byte(self, address, value):
         self._mem[address] = value
-
 
 class SoftSwitches:
 
@@ -58,7 +57,6 @@ class SoftSwitches:
 
 
 class Memory:
-
     def __init__(self, options=None, display=None):
         self.display = display
         self.rom = ROM(0xD000, 0x3000)
