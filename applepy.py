@@ -267,9 +267,9 @@ class ROM:
             self._mem[address - self.start + offset] = datum
 
     def load_file(self, address, filename):
-        with open(filename) as f:
+        with open(filename, "rb") as f:
             for offset, datum in enumerate(f.read()):
-                self._mem[address - self.start + offset] = ord(datum)
+                self._mem[address - self.start + offset] = datum
 
     def read_byte(self, address):
         assert self.start <= address <= self.end
@@ -771,9 +771,9 @@ class CPU:
             op = self.read_pc_byte()
             func = self.ops[op]
             if func is None:
-                print "UNKNOWN OP"
-                print hex(self.program_counter - 1)
-                print hex(op)
+                print("UNKNOWN OP")
+                print(hex(self.program_counter - 1))
+                print(hex(op))
                 break
             else:
                 self.ops[op]()
@@ -808,9 +808,9 @@ class CPU:
             op = self.read_pc_byte()
             func = self.ops[op]
             if func is None:
-                print "UNKNOWN OP"
-                print hex(self.program_counter - 1)
-                print hex(op)
+                print("UNKNOWN OP")
+                print(hex(self.program_counter - 1))
+                print(hex(op))
                 break
             else:
                 self.ops[op]()
@@ -1242,14 +1242,14 @@ class CPU:
 
 
 def usage():
-    print >>sys.stderr, "ApplePy - an Apple ][ emulator in Python"
-    print >>sys.stderr, "James Tauber / http://jtauber.com/"
-    print >>sys.stderr
-    print >>sys.stderr, "Usage: applepy.py [options]"
-    print >>sys.stderr
-    print >>sys.stderr, "    -R, --rom      ROM file to use (default A2ROM.BIN)"
-    print >>sys.stderr, "    -r, --ram      RAM file to load (default none)"
-    print >>sys.stderr, "    -q, --quiet    Quiet mode, no sounds (default sounds)"
+    print("ApplePy - an Apple ][ emulator in Python", file=sys.stderr)
+    print("James Tauber / http://jtauber.com/", file=sys.stderr)
+    print(file=sys.stderr)
+    print("Usage: applepy.py [options]", file=sys.stderr)
+    print(file=sys.stderr)
+    print("    -R, --rom      ROM file to use (default A2ROM.BIN)", file=sys.stderr)
+    print("    -r, --ram      RAM file to load (default none)", file=sys.stderr)
+    print("    -q, --quiet    Quiet mode, no sounds (default sounds)", file=sys.stderr)
     sys.exit(1)
 
 
