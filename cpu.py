@@ -193,17 +193,14 @@ class CPU:
             op = self.read_pc_byte()
             func = self.ops[op]
             if func is None:
-                print("UNKNOWN OP")
-                print(hex(self.program_counter - 1))
-                print(hex(op))
-                break
+                print("UNKNOWN OP",hex(self.program_counter - 1), hex(op))
+                self.BRK()
             else:
-                self.ops[op]()
+                func()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     quit = True
-
                 if event.type == pygame.KEYDOWN:
                     key = ord(event.unicode) if event.unicode else 0
                     if event.key == pygame.K_LEFT:
@@ -214,29 +211,11 @@ class CPU:
                         if key == 0x7F:
                             key = 0x08
                         self.memory.softswitches.kbd = 0x80 + key
-
             update_cycle += 1
             if update_cycle >= 1024:
                 self.memory.display.flash()
                 pygame.display.flip()
                 update_cycle = 0
-
-    def test_run(self, start, end):
-        self.program_counter = start
-        while True:
-            self.cycles += 2 # all instructions take this as a minimum
-            if self.program_counter == end:
-                break
-            op = self.read_pc_byte()
-            func = self.ops[op]
-            if func is None:
-                print("UNKNOWN OP")
-                print(hex(self.program_counter - 1))
-                print(hex(op))
-                break
-            else:
-                self.ops[op]()
-
     ####
 
     def get_pc(self, inc=1):

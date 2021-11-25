@@ -53,6 +53,5 @@ if __name__ == "__main__":
     options = get_options()
     display = Display()
     mem = Memory(options, display)
-
     cpu = CPU(mem)
     cpu.run()
