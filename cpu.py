@@ -1,5 +1,6 @@
 import pygame
 from utils import signed
+from utils import LOG
 
 class CPU:
 
@@ -8,7 +9,6 @@ class CPU:
 
     def __init__(self, memory):
         self.memory = memory
-        self.log = open("apple.log", "w")
 
         self.accumulator = 0x00
         self.x_index = 0x00
@@ -192,12 +192,12 @@ class CPU:
         while not quit:
             pc = self.program_counter
             if not ((0xfb78 <= pc < 0xfb97) or (0xfca8 <= pc < 0xfcb4) or (0xFD1B <= pc < 0xFD2F)):
-                print(f"PC={hex(self.program_counter)} A={hex(self.accumulator)} X={hex(self.x_index)} Y={hex(self.y_index)}", file=self.log)
+                print(f"PC={hex(self.program_counter)} A={hex(self.accumulator)} X={hex(self.x_index)} Y={hex(self.y_index)} P={hex(self.stack_pointer)} S={hex(self.status_as_byte())} ", file=LOG)
             self.cycles += 2 # all instructions take this as a minimum
             op = self.read_pc_byte()
             func = self.ops[op]
             if func is None:
-                print("UNKNOWN OP",hex(self.program_counter - 1), hex(op), file=self.log)
+                print("UNKNOWN OP",hex(self.program_counter - 1), hex(op), file=LOG)
                 self.BRK()
             else:
                 func()

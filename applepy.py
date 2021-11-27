@@ -9,6 +9,7 @@ from cpu import CPU
 from memory import Memory
 from display import Display
 
+
 def usage():
     print("ApplePy - an Apple ][ emulator in Python", file=sys.stderr)
     print("James Tauber / http://jtauber.com/", file=sys.stderr)
