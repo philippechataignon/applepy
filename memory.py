@@ -1,11 +1,11 @@
 import numpy
+from utils import LOG
 
 class ROM:
     def __init__(self, start, size):
         self.start = start
         self.end = start + size - 1
         self._mem = numpy.zeros(size, dtype=numpy.uint8)
-        self.log = open("memory.log", "w")
 
     def load(self, address, data):
         for offset, datum in enumerate(data):
@@ -25,8 +25,9 @@ class RAM(ROM):
 
     def write_byte(self, address, value):
         self._mem[address] = value
-        if address not in (0x4e, 0x4f):
-            print(f"[{hex(address)}]<- {hex(value)}]", file=self.log)
+        # random / text1 / stack & kbd
+        if address not in (0x4e, 0x4f) and not 0x400 <= address < 0x800 and not 0x100 <= address < 0x300:
+            print(f"[{hex(address)}]<- {hex(value)}]", file=LOG)
 
 class SoftSwitches:
 
