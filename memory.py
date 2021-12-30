@@ -1,8 +1,8 @@
 import numpy
-from utils import LOG
 
 class ROM:
-    def __init__(self, start, size):
+    def __init__(self, logfile, start, size):
+        self.logfile = logfile
         self.start = start
         self.end = start + size - 1
         self._mem = numpy.zeros(size, dtype=numpy.uint8)
@@ -22,15 +22,14 @@ class ROM:
         return v
 
 class RAM(ROM):
-
     def write_byte(self, address, value):
         self._mem[address] = value
         # random / text1 / stack & kbd
-        if address not in (0x4e, 0x4f) and not 0x400 <= address < 0x800 and not 0x100 <= address < 0x300:
-            print(f"[{hex(address)}]<- {hex(value)}]", file=LOG)
+        if self.logfile is not None:
+            if address not in (0x4e, 0x4f) and not 0x400 <= address < 0x800 and not 0x100 <= address < 0x300:
+                print(f"[{hex(address)}]<- {hex(value)}]", file=self.logfile)
 
 class SoftSwitches:
-
     def __init__(self, display):
         self.kbd = 0x00
         self.display = display
@@ -63,20 +62,27 @@ class SoftSwitches:
 
 
 class Memory:
-    def __init__(self, options=None, display=None):
+    def __init__(self, options, display=None):
         self.display = display
+        self.options = options
 
-        self.rom = ROM(0xD000, 0x3000)
-        if options.rom:
-            self.rom.load_file(0xD000, options.rom)
+        if self.options.log:
+            self.logfile = open(self.options.log, "w")
+        else:
+            self.logfile = None
 
-        self.ram = RAM(0x0000, 0xC000)
-        if options.load and options.address:
-            with open(options.load, "rb") as f:
+        self.rom = ROM(self.logfile, 0xE000, 0x2000)
+        if self.options.rom:
+            self.rom.load_file(0xE000, self.options.rom)
+
+        self.ram = RAM(self.logfile, 0x0000, 0xC000)
+        if self.options.load and self.options.address:
+            with open(self.options.load, "rb") as f:
                 buff = f.read()
-                self.ram.load(options.address, buff)
+                self.ram.load(self.options.address, buff)
 
         self.softswitches = SoftSwitches(display)
+
 
     def load(self, address, data):
         if address < 0xC000:
