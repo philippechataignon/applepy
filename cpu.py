@@ -1,13 +1,14 @@
+import sys
 import pygame
 from utils import signed
-from utils import LOG
 
 class CPU:
 
     STACK_PAGE = 0x100
     RESET_VECTOR = 0xFFFC
 
-    def __init__(self, memory):
+    def __init__(self, options, memory):
+        self.options = options
         self.memory = memory
 
         self.accumulator = 0x00
@@ -191,13 +192,17 @@ class CPU:
         quit = False
         while not quit:
             pc = self.program_counter
-            if not ((0xfb78 <= pc < 0xfb97) or (0xfca8 <= pc < 0xfcb4) or (0xFD1B <= pc < 0xFD2F)):
-                print(f"PC={hex(self.program_counter)} A={hex(self.accumulator)} X={hex(self.x_index)} Y={hex(self.y_index)} P={hex(self.stack_pointer)} S={hex(self.status_as_byte())} ", file=LOG)
+            if self.options.log:
+                if not ((0xfb78 <= pc < 0xfb97) or (0xfca8 <= pc < 0xfcb4) or (0xFD1B <= pc < 0xFD2F)):
+                    print(f"PC={hex(self.program_counter)} A={hex(self.accumulator)} \
+                            X={hex(self.x_index)} Y={hex(self.y_index)} P={hex(self.stack_pointer)} S={hex(self.status_as_byte())} ",
+                            file=self.memory.logfile
+                    )
             self.cycles += 2 # all instructions take this as a minimum
             op = self.read_pc_byte()
             func = self.ops[op]
             if func is None:
-                print("UNKNOWN OP",hex(self.program_counter - 1), hex(op), file=LOG)
+                print("UNKNOWN OP",hex(self.program_counter - 1), hex(op), file=sys.stderr)
                 self.BRK()
             else:
                 func()

@@ -9,7 +9,6 @@ from cpu import CPU
 from memory import Memory
 from display import Display
 
-
 def usage():
     print("ApplePy - an Apple ][ emulator in Python", file=sys.stderr)
     print("James Tauber / http://jtauber.com/", file=sys.stderr)
@@ -56,8 +55,10 @@ if __name__ == "__main__":
     parser.add_argument("--rom", type=str, default="A2ROM.BIN", help="ROM image file")
     parser.add_argument("--load", type=str, help="program  image file")
     parser.add_argument("--address", type=int, default=0x1000, help="load address")
+    parser.add_argument("--log", type=str, help="log file")
     options = parser.parse_args()
+    print(options)
     display = Display()
     mem = Memory(options, display)
-    cpu = CPU(mem)
+    cpu = CPU(options, mem)
     cpu.run()
