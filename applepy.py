@@ -16,7 +16,9 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--rom", type=str, default="apple2plus.rom", help="ROM image file")
-    parser.add_argument("--load", type=str, help="program hex file")
+    parser.add_argument("--hex", type=str, help="program hex file")
+    parser.add_argument("--bin", type=str, help="program bin file")
+    parser.add_argument("--addr", type=int, help="start address of program bin file")
     parser.add_argument("--log", type=str, help="log file")
     options = parser.parse_args()
     display = Display()
