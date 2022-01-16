@@ -71,9 +71,8 @@ class Memory:
         else:
             self.logfile = None
 
-        self.rom = ROM(self.logfile, 0xE000, 0x2000)
-        if self.options.rom:
-            self.rom.load_file(0xE000, self.options.rom)
+        self.rom = ROM(self.logfile, self.options.rom_address, 0x10000 - self.options.rom_address)
+        self.rom.load_file(0xE000, self.options.rom)
 
         self.ram = RAM(self.logfile, 0x0000, 0xC000)
         if self.options.load and self.options.address:
