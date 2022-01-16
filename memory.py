@@ -1,4 +1,6 @@
 import numpy
+from intelhex import IntelHex
+
 
 class ROM:
     def __init__(self, logfile, start, size):
@@ -71,21 +73,21 @@ class Memory:
         else:
             self.logfile = None
 
-        self.rom = ROM(self.logfile, self.options.rom_address, 0x10000 - self.options.rom_address)
-        self.rom.load_file(0xE000, self.options.rom)
-
         self.ram = RAM(self.logfile, 0x0000, 0xC000)
-        if self.options.load and self.options.address:
-            with open(self.options.load, "rb") as f:
-                buff = f.read()
-                self.ram.load(self.options.address, buff)
+        self.rom = ROM(self.logfile, 0xD000, 0x3000)
+        self.rom.load_file(0xD000, self.options.rom)
+
+        if self.options.load:
+            ih = IntelHex(self.options.load)
+            d = ih.todict()
+            for addr, v in d.items():
+                self.write_byte(addr, v)
 
         self.softswitches = SoftSwitches(display)
 
-
-    def load(self, address, data):
-        if address < 0xC000:
-            self.ram.load(address, data)
+#    def load(self, address, data):
+#        if address < 0xC000:
+#            self.ram.load(address, data)
 
     def read_byte(self, cycle, address):
         if address < 0xC000:
