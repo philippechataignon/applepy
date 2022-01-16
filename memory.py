@@ -9,11 +9,13 @@ class ROM:
         self.end = start + size - 1
         self._mem = numpy.zeros(size, dtype=numpy.uint8)
 
-    def load(self, address, data):
-        for offset, datum in enumerate(data):
-            self._mem[address - self.start + offset] = datum
+    def load_bin(self, address, filename):
+        with open(filename, "rb") as f:
+            data = f.read()
+            for offset, datum in enumerate(data):
+                self._mem[address - self.start + offset] = datum
 
-    def load_file(self, address, filename):
+    def init_bin(self, address, filename):
         with open(filename, "rb") as f:
             self._mem = numpy.fromfile(f, dtype=numpy.uint8)
 
@@ -62,7 +64,6 @@ class SoftSwitches:
             pass # print "%04X" % address
         return 0x00
 
-
 class Memory:
     def __init__(self, options, display=None):
         self.display = display
@@ -75,19 +76,17 @@ class Memory:
 
         self.ram = RAM(self.logfile, 0x0000, 0xC000)
         self.rom = ROM(self.logfile, 0xD000, 0x3000)
-        self.rom.load_file(0xD000, self.options.rom)
+        self.rom.init_bin(0xD000, self.options.rom)
 
-        if self.options.load:
-            ih = IntelHex(self.options.load)
+        if self.options.hex:
+            ih = IntelHex(self.options.hex)
             d = ih.todict()
             for addr, v in d.items():
                 self.write_byte(addr, v)
+        elif self.options.bin and self.options.addr:
+            self.ram.load_bin(self.options.addr, self.options.bin)
 
         self.softswitches = SoftSwitches(display)
-
-#    def load(self, address, data):
-#        if address < 0xC000:
-#            self.ram.load(address, data)
 
     def read_byte(self, cycle, address):
         if address < 0xC000:
