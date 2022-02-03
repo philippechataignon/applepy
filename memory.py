@@ -1,7 +1,6 @@
 import numpy
 from intelhex import IntelHex
 
-
 class ROM:
     def __init__(self, logfile, start, size):
         self.logfile = logfile
@@ -79,10 +78,10 @@ class Memory:
         self.rom.init_bin(0xD000, self.options.rom)
 
         if self.options.hex:
-            ih = IntelHex(self.options.hex)
-            d = ih.todict()
-            for addr, v in d.items():
-                self.write_byte(addr, v)
+            for hexfile in self.options.hex:
+                ih = IntelHex(hexfile)
+                for addr in ih.addresses():
+                    self.write_byte(addr, ih[addr])
         elif self.options.bin and self.options.addr:
             self.ram.load_bin(self.options.addr, self.options.bin)
 
