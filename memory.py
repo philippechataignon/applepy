@@ -1,31 +1,4 @@
-class ROM:
-
-    def __init__(self, start, size):
-        self.start = start
-        self.end = start + size - 1
-        self._mem = [0x00] * size
-
-    def load(self, address, data):
-        for offset, datum in enumerate(data):
-            self._mem[address - self.start + offset] = datum
-
-    def load_file(self, address, filename):
-        with open(filename, "rb") as f:
-            for offset, datum in enumerate(f.read()):
-                self._mem[address - self.start + offset] = datum
-
-    def read_byte(self, address):
-        assert self.start <= address <= self.end
-        return self._mem[address - self.start]
-
-class RAM(ROM):
-
-    def write_byte(self, address, value):
-        self._mem[address] = value
-
-
 class SoftSwitches:
-
     def __init__(self, display):
         self.kbd = 0x00
         self.display = display
@@ -58,33 +31,28 @@ class SoftSwitches:
 
 
 class Memory:
-
-    def __init__(self, options=None, display=None):
+    def __init__(self, display=None):
+        self.size = 65536
+        self.start = 0
+        self.end = self.start + self.size - 1
+        self._mem = [0x00] * self.size
         self.display = display
-
-        self.rom = ROM(0xD000, 0x3000)
-        if options.rom:
-            self.rom.load_file(0xD000, options.rom)
-
-        self.ram = RAM(0x0000, 0xC000)
-        if options.load and options.address:
-            with open(options.load, "rb") as f:
-                buff = f.read()
-                self.ram.load(options.address, buff)
-
         self.softswitches = SoftSwitches(display)
 
+    def store(self, address, data):
+        for offset, datum in enumerate(data):
+            self._mem[address - self.start + offset] = datum
+
     def load(self, address, data):
-        if address < 0xC000:
-            self.ram.load(address, data)
+        if address < 0xC000 or address >= 0xD000:
+            self.store(address, data)
 
     def read_byte(self, cycle, address):
-        if address < 0xC000:
-            return self.ram.read_byte(address)
-        elif address < 0xD000:
+        assert self.start <= address <= self.end
+        if 0xC000 <= address < 0xD000:
             return self.softswitches.read_byte(cycle, address)
         else:
-            return self.rom.read_byte(address)
+            return self._mem[address - self.start]
 
     def read_word(self, cycle, address):
         return self.read_byte(cycle, address) + (self.read_byte(cycle + 1, address + 1) << 8)
@@ -96,8 +64,7 @@ class Memory:
             return self.read_word(cycle, address)
 
     def write_byte(self, address, value):
-        if address < 0xC000:
-            self.ram.write_byte(address, value)
+        self._mem[address] = value
         if 0x400 <= address < 0x800 and self.display:
             self.display.update(address, value)
         if 0x2000 <= address < 0x5FFF and self.display:

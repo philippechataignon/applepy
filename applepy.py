@@ -57,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("--address", type=int, default=0x1000, help="load address")
     options = parser.parse_args()
     display = Display()
-    mem = Memory(options, display)
+    mem = Memory(display)
 
     cpu = CPU(mem)
     cpu.run()

@@ -926,7 +926,7 @@ class TestSystemFunctionOperations(unittest.TestCase):
 
     def test_BRK(self):
         self.cpu.program_counter = 0x1000
-        self.memory.rom.load(0xFFFE, [0x00, 0x20])
+        self.memory.store(0xFFFE, [0x00, 0x20])
         self.cpu.break_flag = 0 # clear B flag before BRK
         status = self.cpu.status_as_byte()
         self.cpu.BRK()
