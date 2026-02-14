@@ -43,16 +43,29 @@ class Memory:
         for offset, datum in enumerate(data):
             self._mem[address - self.start + offset] = datum
 
-    def load(self, address, data):
-        if address < 0xC000 or address >= 0xD000:
-            self.store(address, data)
-
     def read_byte(self, cycle, address):
         assert self.start <= address <= self.end
         if 0xC000 <= address < 0xD000:
             return self.softswitches.read_byte(cycle, address)
         else:
             return self._mem[address - self.start]
+
+    def write_byte(self, address, value):
+        if address < 0xC000 or address >= 0xD000:
+            self._mem[address] = value
+        if 0x400 <= address < 0x800 and self.display:
+            self.display.update(address, value)
+        if 0x2000 <= address < 0x5FFF and self.display:
+            self.display.update(address, value)
+
+    def load(self, address, data):
+        if address < 0xC000 or address >= 0xD000:
+            self.store(address, data)
+
+    def load_file(self, address, filename):
+        ih = IntelHex(filename)
+        for addr, v in ih.todict().items():
+            self.write_byte(addr, v)
 
     def read_word(self, cycle, address):
         return self.read_byte(cycle, address) + (self.read_byte(cycle + 1, address + 1) << 8)
