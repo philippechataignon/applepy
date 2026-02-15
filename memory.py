@@ -1,17 +1,24 @@
 import numpy as np
 from intelhex import IntelHex
 
-class SoftSwitches:
-    def __init__(self, display):
-        self.kbd = 0x00
+class Memory:
+    def __init__(self, display=None):
+        self.mem = np.zeros(0x10000, dtype=np.int_)
         self.display = display
+        self.kbd = 0
+
+    def store(self, address, data):
+        for offset, datum in enumerate(data):
+            self.mem[address + offset] = datum
 
     def read_byte(self, address):
-        assert 0xC000 <= address <= 0xCFFF
+        # if 0xc000 <= address < 0xc200:
+        #     print("<", hex(address), hex(self.mem[address]))
         if address == 0xC000:
-            return self.kbd
-        elif address == 0xC010:
-            self.kbd = self.kbd & 0x7F
+            return self.kdb
+        if address == 0xC010:
+            # clear bit 7
+            self.kdb = self.kbd & 0x7F
         elif address == 0xC050:
             self.display.txtclr()
         elif address == 0xC051:
@@ -28,37 +35,15 @@ class SoftSwitches:
             self.display.lores()
         elif address == 0xC057:
             self.display.hires()
-        else:
-            pass # print "%04X" % address
-        return 0x00
-
-
-class Memory:
-    def __init__(self, display=None):
-        self.size = 65536
-        self.start = 0
-        self.end = self.start + self.size - 1
-        self._mem = np.zeros(self.size, dtype=np.int_)
-        self.display = display
-        self.softswitches = SoftSwitches(display)
-
-    def store(self, address, data):
-        for offset, datum in enumerate(data):
-            self._mem[address - self.start + offset] = datum
-
-    def read_byte(self, address):
-        assert self.start <= address <= self.end
-        if 0xC000 <= address < 0xD000:
-            return self.softswitches.read_byte(address)
-        else:
-            return self._mem[address - self.start]
+        return self.mem[address]
 
     def write_byte(self, address, value):
-        if address < 0xC000 or address >= 0xD000:
-            self._mem[address] = value
-        if 0x400 <= address < 0x800 and self.display:
+        # if 0xc000 <= address < 0xc200:
+        #     print(">", hex(address), hex(value))
+        self.mem[address] = value
+        if self.display and 0x400 <= address < 0x800:
             self.display.update(address, value)
-        if 0x2000 <= address < 0x5FFF and self.display:
+        if self.display and 0x2000 <= address < 0x5FFF:
             self.display.update(address, value)
 
     def load_file(self, filename):
@@ -77,10 +62,3 @@ class Memory:
             return self.read_byte(address) + (self.read_byte(address & 0xff00) << 8)
         else:
             return self.read_word(address)
-
-    def write_byte(self, address, value):
-        self._mem[address] = value
-        if 0x400 <= address < 0x800 and self.display:
-            self.display.update(address, value)
-        if 0x2000 <= address < 0x5FFF and self.display:
-            self.display.update(address, value)

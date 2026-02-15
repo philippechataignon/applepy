@@ -216,7 +216,7 @@ class CPU:
                     if key == 0x7F:
                         key = 0x08
                     if key:
-                        self.memory.softswitches.kbd = 0x80 + key
+                        self.memory.kdb = 0x80 | key
 
             update_cycle += 1
             if update_cycle >= 1024:
