@@ -193,12 +193,10 @@ class CPU:
             op = self.read_pc_byte()
             func = self.ops[op]
             if func is None:
-                print("UNKNOWN OP")
-                print(hex(self.program_counter - 1))
-                print(hex(op))
-                break
+                print("UNKNOWN OP",hex(self.program_counter - 1), hex(op))
+                self.BRK()
             else:
-                self.ops[op]()
+                func()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -221,24 +219,6 @@ class CPU:
                 pygame.display.flip()
                 update_cycle = 0
 
-    def test_run(self, start, end):
-        self.program_counter = start
-        while True:
-            self.cycles += 2 # all instructions take this as a minimum
-            if self.program_counter == end:
-                break
-            op = self.read_pc_byte()
-            func = self.ops[op]
-            if func is None:
-                print("UNKNOWN OP")
-                print(hex(self.program_counter - 1))
-                print(hex(op))
-                break
-            else:
-                self.ops[op]()
-
-    ####
-
     def get_pc(self, inc=1):
         pc = self.program_counter
         self.program_counter += inc
@@ -259,8 +239,6 @@ class CPU:
     def read_pc_word(self):
         return self.read_word(self.get_pc(2))
 
-    ####
-
     def status_from_byte(self, status):
         self.carry_flag = [0, 1][0 != status & 1]
         self.zero_flag = [0, 1][0 != status & 2]
@@ -272,8 +250,6 @@ class CPU:
 
     def status_as_byte(self):
         return self.carry_flag | self.zero_flag << 1 | self.interrupt_disable_flag << 2 | self.decimal_mode_flag << 3 | self.break_flag << 4 | 1 << 5 | self.overflow_flag << 6 | self.sign_flag << 7
-
-    ####
 
     def push_byte(self, byte):
         self.memory.write_byte(self.STACK_PAGE + self.stack_pointer, byte)
@@ -292,8 +268,6 @@ class CPU:
         s = self.STACK_PAGE + self.stack_pointer + 1
         self.stack_pointer += 2
         return self.read_word(s)
-
-    ####
 
     def immediate_mode(self):
         return self.get_pc()
@@ -343,8 +317,6 @@ class CPU:
         pc = self.get_pc()
         return pc + 1 + signed(self.read_byte(pc))
 
-    ####
-
     def update_nz(self, value):
         value = value % 0x100
         self.zero_flag = [0, 1][(value == 0)]
@@ -354,8 +326,6 @@ class CPU:
     def update_nzc(self, value):
         self.carry_flag = [0, 1][(value > 0xFF)]
         return self.update_nz(value)
-
-    ####
 
     # LOAD / STORE
 
