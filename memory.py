@@ -3,7 +3,7 @@ from intelhex import IntelHex
 
 class Memory:
     def __init__(self, display=None):
-        self.mem = np.zeros(0x10000, dtype=np.int_)
+        self.mem = np.zeros(0x10000, dtype=np.int32)
         self.display = display
         self.kbd = 0
 
@@ -12,12 +12,9 @@ class Memory:
             self.mem[address + offset] = datum
 
     def read_byte(self, address):
-        # if 0xc000 <= address < 0xc200:
-        #     print("<", hex(address), hex(self.mem[address]))
         if address == 0xC000:
             return self.kdb
         if address == 0xC010:
-            # clear bit 7
             self.kdb = self.kbd & 0x7F
         elif address == 0xC050:
             self.display.txtclr()
@@ -38,8 +35,6 @@ class Memory:
         return self.mem[address]
 
     def write_byte(self, address, value):
-        # if 0xc000 <= address < 0xc200:
-        #     print(">", hex(address), hex(value))
         self.mem[address] = value
         if self.display and 0x400 <= address < 0x800:
             self.display.update(address, value)
