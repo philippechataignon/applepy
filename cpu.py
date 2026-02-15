@@ -5,6 +5,9 @@ def signed(x):
         x = x - 0x100
     return x
 
+def is_bit(value, bit):
+    return bool(value & (1 << bit))
+
 class CPU:
     STACK_PAGE = 0x100
     RESET_VECTOR = 0xFFFC
@@ -242,13 +245,13 @@ class CPU:
         return self.read_word(self.get_pc(2))
 
     def status_from_byte(self, status):
-        self.carry_flag = bool(status & 1)
-        self.zero_flag = bool(status & 2)
-        self.interrupt_disable_flag = bool(status & 4)
-        self.decimal_mode_flag = bool(status & 8)
-        self.break_flag = bool(status & 16)
-        self.overflow_flag = bool(status & 64)
-        self.sign_flag = bool(status & 128)
+        self.carry_flag = is_bit(status, 0)
+        self.zero_flag = is_bit(status, 1)
+        self.interrupt_disable_flag = is_bit(status, 2)
+        self.decimal_mode_flag = is_bit(status, 3)
+        self.break_flag = is_bit(status, 4)
+        self.overflow_flag = is_bit(status, 6)
+        self.sign_flag = is_bit(status, 7)
 
     def status_as_byte(self):
         return self.carry_flag | self.zero_flag << 1 | self.interrupt_disable_flag << 2 | \
@@ -308,7 +311,7 @@ class CPU:
     def update_nz(self, value):
         value = value & 0xff
         self.zero_flag = value == 0
-        self.sign_flag = bool(value & 0x80)
+        self.sign_flag = is_bit(value, 7)
         return value
 
     def update_nzc(self, value):
@@ -379,21 +382,21 @@ class CPU:
         if operand_address is None:
             if self.carry_flag:
                 self.accumulator = self.accumulator | 0x100
-            self.carry_flag = bool(self.accumulator & 1)
+            self.carry_flag = is_bit(self.accumulator, 0)
             self.accumulator = self.update_nz(self.accumulator >> 1)
         else:
             m = self.read_byte(operand_address)
             if self.carry_flag:
                 m = m | 0x100
-            self.carry_flag = bool(m & 1)
+            self.carry_flag = is_bit(m, 0)
             self.memory.write_byte(operand_address, self.update_nz(m >> 1))
 
     def LSR(self, operand_address=None):
         if operand_address is None:
-            self.carry_flag = bool(self.accumulator & 1)
+            self.carry_flag = is_bit(self.accumulator, 0)
             self.accumulator = self.update_nz(self.accumulator >> 1)
         else:
-            self.carry_flag = bool(self.read_byte(operand_address) & 1)
+            self.carry_flag = is_bit(self.read_byte(operand_address), 0)
             self.memory.write_byte(operand_address,  self.update_nz(self.read_byte(operand_address) >> 1))
 
     # JUMPS / RETURNS
@@ -557,8 +560,8 @@ class CPU:
 
     def BIT(self, operand_address):
         value = self.read_byte(operand_address)
-        self.sign_flag = (value & 0b10000000) != 0 # bit 7
-        self.overflow_flag = (value & 0b01000000) != 0 # bit 6
+        self.sign_flag = is_bit(value, 7)
+        self.overflow_flag = is_bit(value, 6)
         self.zero_flag = (self.accumulator & value) == 0
 
     # COMPARISON
