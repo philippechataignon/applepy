@@ -204,13 +204,17 @@ class CPU:
 
                 if event.type == pygame.KEYDOWN:
                     key = ord(event.unicode) if event.unicode else 0
+                    # print(hex(key))
                     if event.key == pygame.K_LEFT:
                         key = 0x08
                     if event.key == pygame.K_RIGHT:
                         key = 0x15
+                    # convert to uppercase for a-z
+                    if 0x61 <= key <= 0x7a:
+                        key = key - 0x20
+                    if key == 0x7F:
+                        key = 0x08
                     if key:
-                        if key == 0x7F:
-                            key = 0x08
                         self.memory.softswitches.kbd = 0x80 + key
 
             update_cycle += 1
