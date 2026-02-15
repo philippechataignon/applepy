@@ -6,7 +6,6 @@ def signed(x):
     return x
 
 class CPU:
-
     STACK_PAGE = 0x100
     RESET_VECTOR = 0xFFFC
 
@@ -275,9 +274,7 @@ class CPU:
         self.push_byte(lo)
 
     def pull_word(self):
-        s = self.STACK_PAGE + self.stack_pointer + 1
-        self.stack_pointer += 2
-        return self.read_word(s)
+        return self.pull_byte() + (self.pull_byte() << 8)
 
     def immediate_mode(self):
         return self.get_pc()
@@ -330,7 +327,7 @@ class CPU:
     def update_nz(self, value):
         value = value & 0xff
         self.zero_flag = value == 0
-        self.sign_flag = (value & 0x80) != 0
+        self.sign_flag = bool(value & 0x80)
         return value
 
     def update_nzc(self, value):
