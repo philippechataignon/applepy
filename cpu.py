@@ -253,14 +253,16 @@ class CPU:
         self.sign_flag = bool(status & 128)
 
     def status_as_byte(self):
-        return self.carry_flag | self.zero_flag << 1 | self.interrupt_disable_flag << 2 | self.decimal_mode_flag << 3 | self.break_flag << 4 | 1 << 5 | self.overflow_flag << 6 | self.sign_flag << 7
+        return self.carry_flag | self.zero_flag << 1 | self.interrupt_disable_flag << 2 | \
+            self.decimal_mode_flag << 3 | self.break_flag << 4 | 1 << 5 | \
+            self.overflow_flag << 6 | self.sign_flag << 7
 
     def push_byte(self, byte):
         self.memory.write_byte(self.STACK_PAGE + self.stack_pointer, byte)
-        self.stack_pointer = (self.stack_pointer - 1) % 0x100
+        self.stack_pointer = (self.stack_pointer - 1) & 0xff
 
     def pull_byte(self):
-        self.stack_pointer = (self.stack_pointer + 1) % 0x100
+        self.stack_pointer = (self.stack_pointer + 1) & 0xff
         return self.read_byte(self.STACK_PAGE + self.stack_pointer)
 
     def push_word(self, word):
@@ -296,11 +298,11 @@ class CPU:
 
     def zero_page_x_mode(self):
         self.cycles += 1
-        return (self.zero_page_mode() + self.x_index) % 0x100
+        return (self.zero_page_mode() + self.x_index) & 0xff
 
     def zero_page_y_mode(self):
         self.cycles += 1
-        return (self.zero_page_mode() + self.y_index) % 0x100
+        return (self.zero_page_mode() + self.y_index) & 0xff
 
     def indirect_mode(self):
         self.cycles += 2
@@ -308,7 +310,7 @@ class CPU:
 
     def indirect_x_mode(self):
         self.cycles += 4
-        return self.read_word_bug((self.read_pc_byte() + self.x_index) % 0x100)
+        return self.read_word_bug((self.read_pc_byte() + self.x_index) & 0xff)
 
     def indirect_y_mode(self, rmw=False):
         if rmw:
@@ -322,7 +324,7 @@ class CPU:
         return pc + 1 + signed(self.read_byte(pc))
 
     def update_nz(self, value):
-        value = value % 0x100
+        value = value & 0xff
         self.zero_flag = value == 0
         self.sign_flag = (value & 0x80) != 0
         return value
@@ -397,23 +399,23 @@ class CPU:
         if operand_address is None:
             if self.carry_flag:
                 self.accumulator = self.accumulator | 0x100
-            self.carry_flag = self.accumulator % 2
+            self.carry_flag = bool(self.accumulator & 1)
             self.accumulator = self.update_nz(self.accumulator >> 1)
         else:
             self.cycles += 2
             m = self.read_byte(operand_address)
             if self.carry_flag:
                 m = m | 0x100
-            self.carry_flag = m % 2
+            self.carry_flag = bool(m & 1)
             self.memory.write_byte(operand_address, self.update_nz(m >> 1))
 
     def LSR(self, operand_address=None):
         if operand_address is None:
-            self.carry_flag = bool(self.accumulator % 2)
+            self.carry_flag = bool(self.accumulator & 1)
             self.accumulator = self.update_nz(self.accumulator >> 1)
         else:
             self.cycles += 2
-            self.carry_flag = self.read_byte(operand_address) % 2
+            self.carry_flag = bool(self.read_byte(operand_address) & 1)
             self.memory.write_byte(operand_address,  self.update_nz(self.read_byte(operand_address) >> 1))
 
     # JUMPS / RETURNS
@@ -550,7 +552,7 @@ class CPU:
     # ARITHMETIC
 
     def ADC(self, operand_address):
-        # @@@ doesn't handle BCD yet
+        # @@@ doesn't handle BCD
         assert not self.decimal_mode_flag
 
         a2 = self.accumulator
@@ -570,7 +572,7 @@ class CPU:
         self.overflow_flag = (result1 > 127) | (result1 < -128)
 
     def SBC(self, operand_address):
-        # @@@ doesn't handle BCD yet
+        # @@@ doesn't handle BCD
         assert not self.decimal_mode_flag
 
         a2 = self.accumulator
@@ -594,8 +596,8 @@ class CPU:
 
     def BIT(self, operand_address):
         value = self.read_byte(operand_address)
-        self.sign_flag = (value & 0b10000000) != 0
-        self.overflow_flag = (value & 0b01000000) != 0
+        self.sign_flag = (value & 0b10000000) != 0 # bit 7
+        self.overflow_flag = (value & 0b01000000) != 0 # bit 6
         self.zero_flag = (self.accumulator & value) == 0
 
     # COMPARISON
@@ -631,7 +633,3 @@ class CPU:
         self.cycles += 4
         self.status_from_byte(self.pull_byte())
         self.program_counter = self.pull_word()
-
-
-    # @@@ IRQ
-    # @@@ NMI
