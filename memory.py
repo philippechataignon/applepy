@@ -6,7 +6,7 @@ class SoftSwitches:
         self.kbd = 0x00
         self.display = display
 
-    def read_byte(self, cycle, address):
+    def read_byte(self, address):
         assert 0xC000 <= address <= 0xCFFF
         if address == 0xC000:
             return self.kbd
@@ -46,10 +46,10 @@ class Memory:
         for offset, datum in enumerate(data):
             self._mem[address - self.start + offset] = datum
 
-    def read_byte(self, cycle, address):
+    def read_byte(self, address):
         assert self.start <= address <= self.end
         if 0xC000 <= address < 0xD000:
-            return self.softswitches.read_byte(cycle, address)
+            return self.softswitches.read_byte(address)
         else:
             return self._mem[address - self.start]
 
@@ -69,14 +69,14 @@ class Memory:
         for addr, v in d.items():
             self.write_byte(addr, v)
 
-    def read_word(self, cycle, address):
-        return self.read_byte(cycle, address) + (self.read_byte(cycle + 1, address + 1) << 8)
+    def read_word(self, address):
+        return self.read_byte(address) + (self.read_byte(address + 1) << 8)
 
-    def read_word_bug(self, cycle, address):
-        if address % 0x100 == 0xFF:
-            return self.read_byte(cycle, address) + (self.read_byte(cycle + 1, address & 0xFF00) << 8)
+    def read_word_bug(self, address):
+        if address & 0xff == 0xff:
+            return self.read_byte(address) + (self.read_byte(address & 0xff00) << 8)
         else:
-            return self.read_word(cycle, address)
+            return self.read_word(address)
 
     def write_byte(self, address, value):
         self._mem[address] = value
