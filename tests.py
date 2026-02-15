@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 from applepy import Memory, CPU
 
@@ -8,7 +10,7 @@ class TestMemory(unittest.TestCase):
         self.memory = Memory()
 
     def test_load(self):
-        self.memory.load(0x1000, [0x01, 0x02, 0x03])
+        self.memory.store(0x1000, [0x01, 0x02, 0x03])
         self.assertEqual(self.memory.read_byte(None, 0x1000), 0x01)
         self.assertEqual(self.memory.read_byte(None, 0x1001), 0x02)
         self.assertEqual(self.memory.read_byte(None, 0x1002), 0x03)
@@ -27,7 +29,7 @@ class TestLoadStoreOperations(unittest.TestCase):
     def setUp(self):
         self.memory = Memory()
         self.cpu = CPU(self.memory)
-        self.memory.load(0x1000, [0x00, 0x01, 0x7F, 0x80, 0xFF])
+        self.memory.store(0x1000, [0x00, 0x01, 0x7F, 0x80, 0xFF])
 
     def test_LDA(self):
         self.cpu.LDA(0x1000)
@@ -957,21 +959,21 @@ class Test6502Bugs(unittest.TestCase):
 
     def test_zero_page_x(self):
         self.cpu.x_index = 0x01
-        self.memory.load(0x1000, [0x00, 0x7F, 0xFF])
+        self.memory.store(0x1000, [0x00, 0x7F, 0xFF])
         self.cpu.program_counter = 0x1000
         self.assertEqual(self.cpu.zero_page_x_mode(), 0x01)
         self.assertEqual(self.cpu.zero_page_x_mode(), 0x80)
         self.assertEqual(self.cpu.zero_page_x_mode(), 0x00)
 
     def test_indirect(self):
-        self.memory.load(0x20, [0x00, 0x20])
-        self.memory.load(0x00, [0x12])
-        self.memory.load(0xFF, [0x34])
-        self.memory.load(0x100, [0x56])
-        self.memory.load(0x1000, [0x20, 0x20, 0xFF, 0xFF, 0x00, 0x45, 0x23])
-        self.memory.load(0x2000, [0x05])
-        self.memory.load(0x1234, [0x05])
-        self.memory.load(0x2345, [0x00, 0xF0])
+        self.memory.store(0x20, [0x00, 0x20])
+        self.memory.store(0x00, [0x12])
+        self.memory.store(0xFF, [0x34])
+        self.memory.store(0x100, [0x56])
+        self.memory.store(0x1000, [0x20, 0x20, 0xFF, 0xFF, 0x00, 0x45, 0x23])
+        self.memory.store(0x2000, [0x05])
+        self.memory.store(0x1234, [0x05])
+        self.memory.store(0x2345, [0x00, 0xF0])
 
         self.cpu.program_counter = 0x1000
 

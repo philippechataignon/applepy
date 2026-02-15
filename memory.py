@@ -1,3 +1,5 @@
+from intelhex import IntelHex
+
 class SoftSwitches:
     def __init__(self, display):
         self.kbd = 0x00
@@ -58,13 +60,12 @@ class Memory:
         if 0x2000 <= address < 0x5FFF and self.display:
             self.display.update(address, value)
 
-    def load(self, address, data):
-        if address < 0xC000 or address >= 0xD000:
-            self.store(address, data)
-
-    def load_file(self, address, filename):
+    def load_file(self, filename):
         ih = IntelHex(filename)
-        for addr, v in ih.todict().items():
+        d = ih.todict()
+        if "start_addr" in d:
+            del d["start_addr"]
+        for addr, v in d.items():
             self.write_byte(addr, v)
 
     def read_word(self, cycle, address):
