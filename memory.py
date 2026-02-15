@@ -1,3 +1,4 @@
+import numpy as np
 from intelhex import IntelHex
 
 class SoftSwitches:
@@ -37,7 +38,7 @@ class Memory:
         self.size = 65536
         self.start = 0
         self.end = self.start + self.size - 1
-        self._mem = [0x00] * self.size
+        self._mem = np.zeros(self.size, dtype=np.int_)
         self.display = display
         self.softswitches = SoftSwitches(display)
 
