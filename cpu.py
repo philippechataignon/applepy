@@ -13,13 +13,13 @@ class CPU:
         self.x_index = 0x00
         self.y_index = 0x00
 
-        self.carry_flag = 0
-        self.zero_flag = 0
-        self.interrupt_disable_flag = 0
-        self.decimal_mode_flag = 0
-        self.break_flag = 1
-        self.overflow_flag = 0
-        self.sign_flag = 0
+        self.carry_flag = False
+        self.zero_flag = False
+        self.interrupt_disable_flag = False
+        self.decimal_mode_flag = False
+        self.break_flag = True
+        self.overflow_flag = False
+        self.sign_flag = False
 
         self.stack_pointer = 0xFF
 
@@ -244,13 +244,13 @@ class CPU:
         return self.read_word(self.get_pc(2))
 
     def status_from_byte(self, status):
-        self.carry_flag = int(bool(status & 1))
-        self.zero_flag = int(bool(status & 2))
-        self.interrupt_disable_flag = int(bool(status & 4))
-        self.decimal_mode_flag = int(bool(status & 8))
-        self.break_flag = int(bool(status & 16))
-        self.overflow_flag = int(bool(status & 64))
-        self.sign_flag = int(bool(status & 128))
+        self.carry_flag = bool(status & 1)
+        self.zero_flag = bool(status & 2)
+        self.interrupt_disable_flag = bool(status & 4)
+        self.decimal_mode_flag = bool(status & 8)
+        self.break_flag = bool(status & 16)
+        self.overflow_flag = bool(status & 64)
+        self.sign_flag = bool(status & 128)
 
     def status_as_byte(self):
         return self.carry_flag | self.zero_flag << 1 | self.interrupt_disable_flag << 2 | self.decimal_mode_flag << 3 | self.break_flag << 4 | 1 << 5 | self.overflow_flag << 6 | self.sign_flag << 7
@@ -323,12 +323,12 @@ class CPU:
 
     def update_nz(self, value):
         value = value % 0x100
-        self.zero_flag = int(bool(value == 0))
-        self.sign_flag = int(bool(value & 0x80))
+        self.zero_flag = value == 0
+        self.sign_flag = (value & 0x80) != 0
         return value
 
     def update_nzc(self, value):
-        self.carry_flag = int(bool(value > 0xFF))
+        self.carry_flag = value > 0xFF
         return self.update_nz(value)
 
     # LOAD / STORE
@@ -409,7 +409,7 @@ class CPU:
 
     def LSR(self, operand_address=None):
         if operand_address is None:
-            self.carry_flag = self.accumulator % 2
+            self.carry_flag = bool(self.accumulator % 2)
             self.accumulator = self.update_nz(self.accumulator >> 1)
         else:
             self.cycles += 2
@@ -476,25 +476,25 @@ class CPU:
     # SET / CLEAR FLAGS
 
     def CLC(self):
-        self.carry_flag = 0
+        self.carry_flag = False
 
     def CLD(self):
-        self.decimal_mode_flag = 0
+        self.decimal_mode_flag = False
 
     def CLI(self):
-        self.interrupt_disable_flag = 0
+        self.interrupt_disable_flag = False
 
     def CLV(self):
-        self.overflow_flag = 0
+        self.overflow_flag = False
 
     def SEC(self):
-        self.carry_flag = 1
+        self.carry_flag = True
 
     def SED(self):
-        self.decimal_mode_flag = 1
+        self.decimal_mode_flag = True
 
     def SEI(self):
-        self.interrupt_disable_flag = 1
+        self.interrupt_disable_flag = True
 
     # INCREMENT / DECREMENT
 
@@ -567,7 +567,7 @@ class CPU:
         self.accumulator = self.update_nzc(result2)
 
         # perhaps this could be calculated from result2 but result1 is more intuitive
-        self.overflow_flag = int(bool((result1 > 127) | (result1 < -128)))
+        self.overflow_flag = (result1 > 127) | (result1 < -128)
 
     def SBC(self, operand_address):
         # @@@ doesn't handle BCD yet
@@ -585,34 +585,34 @@ class CPU:
         result2 = a2 - m2 - (not self.carry_flag)
 
         self.accumulator = self.update_nz(result2)
-        self.carry_flag = int(bool(result2 >= 0))
+        self.carry_flag = result2 >= 0
 
         # perhaps this could be calculated from result2 but result1 is more intuitive
-        self.overflow_flag = int(bool((result1 > 127) | (result1 < -128)))
+        self.overflow_flag = (result1 > 127) | (result1 < -128)
 
     # BIT
 
     def BIT(self, operand_address):
         value = self.read_byte(operand_address)
-        self.sign_flag = ((value >> 7) % 2) # bit 7
-        self.overflow_flag = ((value >> 6) % 2) # bit 6
-        self.zero_flag = int(not bool(self.accumulator & value))
+        self.sign_flag = (value & 0b10000000) != 0
+        self.overflow_flag = (value & 0b01000000) != 0
+        self.zero_flag = (self.accumulator & value) == 0
 
     # COMPARISON
 
     def CMP(self, operand_address):
         result = self.accumulator - self.read_byte(operand_address)
-        self.carry_flag = int(bool(result >= 0))
+        self.carry_flag = result >= 0
         self.update_nz(result)
 
     def CPX(self, operand_address):
         result = self.x_index - self.read_byte(operand_address)
-        self.carry_flag = int(bool(result >= 0))
+        self.carry_flag = result >= 0
         self.update_nz(result)
 
     def CPY(self, operand_address):
         result = self.y_index - self.read_byte(operand_address)
-        self.carry_flag = int(bool(result >= 0))
+        self.carry_flag = result >= 0
         self.update_nz(result)
 
     # SYSTEM
@@ -622,7 +622,7 @@ class CPU:
 
     def BRK(self):
         self.cycles += 5
-        self.break_flag = 1
+        self.break_flag = True
         self.push_word(self.program_counter + 1)
         self.push_byte(self.status_as_byte())
         self.program_counter = self.read_word(0xFFFE)
